@@ -16,6 +16,7 @@ struct ContentView: View {
     @State private var guessedLetter = ""
     @State private var imageName = "flower8"
     @State private var playAgainHidden = true
+    @FocusState private var textFIeldIsFocused: Bool
     
     var body: some View {
         VStack {
@@ -25,7 +26,7 @@ struct ContentView: View {
                     Text("words Missed: \(wordsMissed)")
                 }
                 Spacer()
-                VStack(alignment: .leading) {
+                VStack(alignment: .trailing) {
                     Text("Words to Guess: \(wordsToGuess.count - (wordsGuessed + wordsMissed))")
                     Text("Words in Game: \(wordsToGuess.count)")
                 }
@@ -53,14 +54,25 @@ struct ContentView: View {
                                 .stroke(.gray, lineWidth: 2)
                         }
                         .keyboardType(.asciiCapable)
+                        .submitLabel(.done)
                         .autocorrectionDisabled()
+                        .textInputAutocapitalization(.characters)
+                        .onChange(of: guessedLetter) {
+                            guessedLetter = guessedLetter.trimmingCharacters(in: .letters.inverted)
+                            guard let lastChar = guessedLetter.last else {
+                                return
+                            }
+                            guessedLetter = String(lastChar).uppercased()
+                        }
+                        .focused($textFIeldIsFocused)
                     
                     Button("Guess a Letter:") {
                         //TODO: Guess  Letter button action here
-                        playAgainHidden = false
+                        textFIeldIsFocused = false
                     }
                     .buttonStyle(.bordered)
                     .tint(.mint)
+                    .disabled(guessedLetter.isEmpty)
                 }
             } else {
                 Button("Another Word?") {
