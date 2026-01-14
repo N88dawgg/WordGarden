@@ -52,7 +52,8 @@ struct ContentView: View {
                             RoundedRectangle(cornerRadius: 5)
                                 .stroke(.gray, lineWidth: 2)
                         }
-                    
+                        .keyboardType(.asciiCapable)
+                        .autocorrectionDisabled()
                     
                     Button("Guess a Letter:") {
                         //TODO: Guess  Letter button action here
