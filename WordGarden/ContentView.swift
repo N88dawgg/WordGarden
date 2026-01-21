@@ -18,9 +18,11 @@ struct ContentView: View {
     @State private var guessedLetter = ""
     @State private var imageName = "flower8"
     @State private var playAgainHidden = true
+    @State private var playAgainButtonLabel = "Another Word?"
+    @State private var guessesRemaining = maximumGuesses
     @FocusState private var textFIeldIsFocused: Bool
     private let wordsToGuess = ["SWIFT", "DOG", "CAT"] // All Caps
-    
+    private static let maximumGuesses = 8 // Need to refer to this as Self.maximumGuesses
     var body: some View {
         VStack {
             HStack {
@@ -41,6 +43,8 @@ struct ContentView: View {
             Text(gameStatusMessage)
                 .font(.title)
                 .multilineTextAlignment(.center)
+                .frame(minHeight: 80)
+                .minimumScaleFactor(0.5)
                 .padding()
             
             //TODO: Switch to worsToGuessed[currentWordIndex]
@@ -73,18 +77,34 @@ struct ContentView: View {
                             guard guessedLetter != "" else {
                                 return
                             }
+                            guessALetter()
+                            updateGamePlay()
                         }
                     
                     Button("Guess a Letter:") {
                         guessALetter()
+                        updateGamePlay()
                     }
                     .buttonStyle(.bordered)
                     .tint(.mint)
                     .disabled(guessedLetter.isEmpty)
                 }
             } else {
-                Button("Another Word?") {
-                    //TODO: Another Word Button Action Here
+                Button(playAgainButtonLabel) {
+                    // If all of the word have been guessed...
+                    if currentWordIndex == wordsToGuess.count {
+                        currentWordIndex = 0
+                        wordsGuessed = 0
+                        wordsMissed = 0
+                        playAgainButtonLabel = "Another Word?"
+                    }
+                    // Reset after a word was guessed or missed
+                    wordToGuess = wordsToGuess[currentWordIndex]
+                    revealedWord = "_" + String(repeating: " _", count: wordToGuess.count-1)
+                    lettersGussed = ""
+                    guessesRemaining = Self.maximumGuesses // ecause maximumGuesses is static
+                    imageName = "flower\(guessesRemaining)"
+                    gameStatusMessage = "How Many Guesses to Uncover the Hidden Word?"
                     playAgainHidden = true
                 }
                 .buttonStyle(.borderedProminent)
@@ -109,7 +129,37 @@ struct ContentView: View {
         lettersGussed = lettersGussed + guessedLetter
         revealedWord = wordToGuess.map{ letter in lettersGussed.contains(letter) ? "\(letter)" : "_"
         }.joined(separator: " ")
+    }
+    
+    func updateGamePlay() {
+        if !wordToGuess.contains(guessedLetter) {
+            guessesRemaining -= 1
+            imageName = "flower\(guessesRemaining)"
+        }
+        
+        // When Do We Play Another Word?
+        if !revealedWord.contains("_") { // Gussed when no "_" in revealWord
+            gameStatusMessage = "You Gussed It! It Took You \(lettersGussed.count) Guesses to Guess the Word"
+            wordsGuessed += 1
+            currentWordIndex += 1
+            playAgainHidden = false
+        } else if guessesRemaining == 0 { // Word missed
+            gameStatusMessage = "So Sorry, You're All Out of Guesses"
+            wordsMissed += 1
+            currentWordIndex += 1
+            playAgainHidden = false
+        } else { // Keep Guessing
+            //TODO: Redo this with LocalizedStringey & Inflect
+            gameStatusMessage = "You've Made \(lettersGussed.count) Guess\(lettersGussed.count == 1 ? "" : "es")"
+        }
+        
+        if currentWordIndex == wordsToGuess.count {
+            playAgainButtonLabel = "Restart Game?"
+            gameStatusMessage = gameStatusMessage + "\nYou've Tried All of the Words. Restart from the Beginning?"
+        }
+        
         guessedLetter = ""
+
     }
 }
 
